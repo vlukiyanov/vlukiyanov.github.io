@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Vladimir Lukiyanov">
+    
+    <link rel="shortcut icon" href="https://vlukiyanov.github.io/favicon.ico">
+    
+    <link rel="stylesheet" href="/css/style.min.css">
+
+    <title>Exploring Redis streams with Akka streams</title>
+</head>
+<body><header id="banner">
+    <h2><a href="https://vlukiyanov.github.io">Vladimir Lukiyanov</a></h2>
+    <nav>
+        <ul>
+            <li>
+                <a href="/" title="posts">posts</a>
+            </li><li>
+                <a href="/about/" title="about">about</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main id="content">
+<article>
+    <header id="post-header">
+        <h1>Exploring Redis streams with Akka streams</h1><time>November 27, 2020</time></header><p>In this post we will explore using Redis streams in Akka streams using the popular Java library <a href="https://github.com/lettuce-io/lettuce-core">Lettuce</a>; Redis is an in-memory database used in distributed systems, and Akka streams is a popular reactive streams implementation for Scala. The streams data structure in Redis implements a persistent log with support for consumer groups, this is a data structure designed to fan out messages to multiple consumers and there is a <a href="https://redis.io/topics/streams-intro">good but lengthy introduction to Redis streams on the Redis website</a>, but roughly speaking there are three classes of operation:</p>
+<ul>
+<li><strong>Adding messages to the stream</strong> using the <a href="https://redis.io/commands/xadd">XADD</a> operation; each message has a unique ID, which is usually generated automatically by the Redis server and returned to the caller.</li>
+<li><strong>Reading messages from the stream</strong> using <a href="https://redis.io/commands/xread">XREAD</a> and <a href="https://redis.io/commands/xreadgroup">XREADGROUP</a> operations. There are various modes here, from just reading a given message by ID, to reading message using consumer groups.</li>
+<li><strong>Dealing with consumer groups, consumers, and acknowledging messages</strong> using operations like <a href="https://redis.io/commands/xack">XACK</a>, <a href="https://redis.io/commands/xgroup">XGROUP</a>, and <a href="https://redis.io/commands/xgroup">XPENDING</a>.</li>
+</ul>
+<p>In essence consumer groups allow fanning out messages to multiple consumers with guarantees around delivery, and the ability to inspect messages that were consumed but not acknowledged by consumers - properties that are essential for building reliable systems. To explore the Redis streams API we will create a simple app which will produce, consume and then acknowledge messages, a rough outline is the following:</p>
+<div style="text-align: center;">
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.3/mermaid.js"></script>
+<div class="mermaid center">
+    
+graph LR;
+    A(Source of messages) --> B(XADD) --> C(Sink ignore)
+
+</div>
+
+</div>
+<div style="text-align: center;">
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.3/mermaid.js"></script>
+<div class="mermaid center">
+    
+graph LR;
+    E(Source of XREADGROUP) --> F(Sink XACK)
+
+</div>
+
+</div>
+<p>We will optimise this app for throughput, but note that the optimisations are unlikely to transfer equally to all environments.</p>
+<p>Using Redis streams with Akka streams is possible using one of the Redis client libraries for Java in Scala, in particular <a href="https://github.com/redisson/redisson">Redisson</a> and <a href="https://github.com/lettuce-io/lettuce-core">Lettuce</a>; in the following examples we use the simple async version of the latter. Note that Lettuce also has a <a href="https://github.com/lettuce-io/lettuce-core/wiki/Reactive-API-(5.0)">reactive interface</a> using <a href="http://projectreactor.io/">Project Reactor</a>, this interface can be used within Akka Streams via the <a href="https://doc.akka.io/docs/akka/current/stream/reactive-streams-interop.html">reactive streams interop</a> and might be suitable for a number of applications and environments.</p>
+<h1 id="setting-up">Setting up</h1>
+<p>To experiment with Redis streams we need a local server, using Docker some variation of <code>docker run --name redis-local -p 6379:6379 -d redis</code> will setup a local server on port <code>6379</code>; if you adjust the port number, using say <code>-p 6380:6379</code>, you will then need to change the connection string to match (controlled by the environment variable <code>REDIS_URL</code>)</p>
+<p>The repo <a href="https://github.com/vlukiyanov/akka-redis-streams-example">vlukiyanov/akka-redis-streams-example</a> contains full examples of a producer and a consumer.</p>
+<h1 id="producing-messages">Producing messages</h1>
+<p>The producer publishes a <code>Map[String, String]</code> to a given stream using the <a href="https://redis.io/commands/xadd">XADD</a> operation, this will then add the input to the stream with an ID based on the timestamp, which is then returned; the process can be modelled as a <code>Flow[Map[String, String], String, NotUsed]</code>. A simple implementation using Lettuce&rsquo;s <code>XACK</code> could be roughly the following:</p>
+<div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">object</span> <span class="nc">RedisStreamsFlow</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">create</span><span class="o">(</span><span class="n">redis</span><span class="k">:</span> <span class="kt">RedisCommands</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">],</span>
+             <span class="n">stream</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Flow</span><span class="o">[</span><span class="kt">Map</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">]</span>, <span class="kt">String</span>, <span class="kt">NotUsed</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="nc">Flow</span>
+      <span class="o">.</span><span class="n">apply</span><span class="o">[</span><span class="kt">Map</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">]]</span>
+      <span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">elem</span> <span class="k">=&gt;</span> <span class="n">redis</span><span class="o">.</span><span class="n">xadd</span><span class="o">(</span><span class="n">stream</span><span class="o">,</span> <span class="n">elem</span><span class="o">.</span><span class="n">asJava</span><span class="o">))</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div><p>This is simple but not always performant, a more performant version can be implemented using pipelining. To do this compress the <code>Flow</code> using the <code>groupedWithin</code> method, then send the groups in <code>Seq[Map[String, String]]</code> chunks to create <code>Seq[String]</code> and finally apply <code>.mapConcat(identity)</code> to flatten the results into instances of <code>String</code>.</p>
+<div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">object</span> <span class="nc">RedisStreamsFlow</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">create</span><span class="o">(</span><span class="n">redis</span><span class="k">:</span> <span class="kt">RedisAsyncCommands</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">],</span>
+             <span class="n">stream</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Flow</span><span class="o">[</span><span class="kt">Map</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">]</span>, <span class="kt">String</span>, <span class="kt">NotUsed</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">redis</span><span class="o">.</span><span class="n">setAutoFlushCommands</span><span class="o">(</span><span class="kc">false</span><span class="o">)</span>
+    <span class="nc">Flow</span>
+      <span class="o">.</span><span class="n">apply</span><span class="o">[</span><span class="kt">Map</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">]]</span>
+      <span class="o">.</span><span class="n">groupedWithin</span><span class="o">(</span><span class="mi">1000</span><span class="o">,</span> <span class="mf">1.</span><span class="n">second</span><span class="o">)</span>
+      <span class="o">.</span><span class="n">mapAsync</span><span class="o">(</span><span class="mi">4</span><span class="o">)</span> <span class="o">{</span> <span class="n">elems</span> <span class="k">=&gt;</span>
+        <span class="o">{</span>
+          <span class="k">val</span> <span class="n">futures</span> <span class="k">=</span>
+            <span class="n">elems</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">elem</span> <span class="k">=&gt;</span> <span class="n">redis</span><span class="o">.</span><span class="n">xadd</span><span class="o">(</span><span class="n">stream</span><span class="o">,</span> <span class="n">elem</span><span class="o">.</span><span class="n">asJava</span><span class="o">).</span><span class="n">asScala</span><span class="o">)</span>
+          <span class="n">redis</span><span class="o">.</span><span class="n">flushCommands</span><span class="o">()</span>
+          <span class="nc">Future</span><span class="o">.</span><span class="n">sequence</span><span class="o">(</span><span class="n">futures</span><span class="o">)</span>
+        <span class="o">}</span>
+      <span class="o">}</span>
+      <span class="o">.</span><span class="n">mapConcat</span><span class="o">(</span><span class="n">identity</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div><p>In the above <code>redis.setAutoFlushCommands(false)</code> disables Lettuce&rsquo;s automatic flushing, as discussed in <a href="https://lettuce.io/core/release/reference/#_pipelining_and_command_flushing">Lettuce documentation</a>, and instead pipelines the commands manually. This periodically invokes writing to the transport layer using <code>redis.flushCommands()</code> after many commands have been added - increasing throughput. On my local system setting parallelism to 4 increased throughput to a maximum, given Redis is single threaded this is something to note, though may not be relevant in actual production scenarios.</p>
+<p>The code for this is in <a href="https://github.com/vlukiyanov/akka-redis-streams-example/blob/main/src/main/scala/api/RedisStreamsFlow.scala"><code>RedisStreamsFlow.scala</code></a> and <a href="https://github.com/vlukiyanov/akka-redis-streams-example/blob/main/src/main/scala/example/ProducerExample.scala"><code>ProducerExample.scala</code></a>.</p>
+<h1 id="consuming-messages">Consuming messages</h1>
+<p>There are many ways to consume messages using Redis streams, to make the most of the capabilities that stream offers we need to use consumer groups as discussed in the <a href="https://redis.io/topics/streams-intro">introduction on the Redis website</a>. Lettuce&rsquo;s <a href="https://redis.io/commands/xreadgroup">XREADGROUP</a> implementation takes a consumer group, consumer name, an offset configuration for the reading the stream and returns a  list of <code>io.lettuce.core.StreamMessage</code>; a <code>StreamMessage</code> stores a string <code>id</code> and a <code>Map[String, String]</code> representing the <code>body</code> of the message consumed. We can model the consumer as a <code>Source[StreamMessage[String, String], Cancellable]</code>. An implementation is something like the following:</p>
+<div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">object</span> <span class="nc">RedisStreamsSource</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">create</span><span class="o">(</span>
+      <span class="n">redis</span><span class="k">:</span> <span class="kt">RedisAsyncCommands</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">],</span>
+      <span class="n">stream</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+      <span class="n">group</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+      <span class="n">consumer</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Source</span><span class="o">[</span><span class="kt">StreamMessage</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">]</span>, <span class="kt">Cancellable</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="nc">Source</span>
+      <span class="o">.</span><span class="n">tick</span><span class="o">(</span><span class="mi">0</span> <span class="n">millisecond</span><span class="o">,</span> <span class="mi">100</span> <span class="n">millisecond</span><span class="o">,</span> <span class="nc">Done</span><span class="o">)</span>
+      <span class="o">.</span><span class="n">mapAsync</span><span class="o">(</span><span class="mi">4</span><span class="o">)</span> <span class="o">{</span> <span class="k">_</span> <span class="k">=&gt;</span>
+        <span class="n">redis</span>
+          <span class="o">.</span><span class="n">xreadgroup</span><span class="o">(</span>
+            <span class="nc">Consumer</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">group</span><span class="o">,</span> <span class="n">consumer</span><span class="o">),</span>
+            <span class="nc">XReadArgs</span><span class="o">.</span><span class="nc">Builder</span><span class="o">.</span><span class="n">count</span><span class="o">(</span><span class="mi">100000</span><span class="o">),</span>
+            <span class="nc">XReadArgs</span><span class="o">.</span><span class="nc">StreamOffset</span><span class="o">.</span><span class="n">lastConsumed</span><span class="o">(</span><span class="n">stream</span><span class="o">)</span>
+          <span class="o">)</span>
+          <span class="o">.</span><span class="n">asScala</span>
+      <span class="o">}</span>
+      <span class="o">.</span><span class="n">mapConcat</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">asScala</span><span class="o">.</span><span class="n">toList</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div><p>The parameters here need tuning, but this will poll Redis at some fixed interval, then flatten the lists of messages using <code>.mapConcat(_.asScala.toList)</code>. On my local system setting parallelism to 4 increased throughput to a maximum, given Redis is single threaded this is again something to note, though may not be relevant in actual production scenarios. The code for this is in <a href="https://github.com/vlukiyanov/akka-redis-streams-example/blob/main/src/main/scala/api/RedisStreamsSource.scala"><code>RedisStreamsSource.scala</code></a> and <a href="https://github.com/vlukiyanov/akka-redis-streams-example/blob/main/src/main/scala/example/ConsumerExample.scala"><code>ConsumerExample.scala</code></a>.</p>
+<h1 id="acknowledging-messages">Acknowledging messages</h1>
+<p>When a consumer in a consumer group has successfully processed a message it should indicate this by sending an <a href="https://redis.io/commands/xack">XACK</a>; sending <a href="https://redis.io/commands/xack">XACK</a> removes the message from the pending list. As a message is uniquely determined by a string id, this process can be modelled as <code>Sink[String, NotUsed]</code>, and in implementation is something like the following:</p>
+<div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">object</span> <span class="nc">RedisStreamsAckSink</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">create</span><span class="o">(</span><span class="n">redis</span><span class="k">:</span> <span class="kt">RedisAsyncCommands</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">],</span>
+             <span class="n">group</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+             <span class="n">stream</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Sink</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">NotUsed</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="nc">Flow</span>
+      <span class="o">.</span><span class="n">apply</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+      <span class="o">.</span><span class="n">mapAsync</span><span class="o">(</span><span class="mi">4</span><span class="o">)</span> <span class="o">{</span> <span class="n">messageId</span> <span class="k">=&gt;</span>
+        <span class="n">redis</span><span class="o">.</span><span class="n">xack</span><span class="o">(</span><span class="n">stream</span><span class="o">,</span> <span class="n">group</span><span class="o">,</span> <span class="n">messageId</span><span class="o">).</span><span class="n">asScala</span>
+      <span class="o">}</span>
+      <span class="o">.</span><span class="n">to</span><span class="o">(</span><span class="nc">Sink</span><span class="o">.</span><span class="n">ignore</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div><h1 id="threading-it-all-together">Threading it all together</h1>
+<p>We&rsquo;re now able to create a full example which simultaneously produces and consumes messages, afterwards acknowledging them. First the producer, this includes a snippet from <a href="https://stackoverflow.com/a/49279641">https://stackoverflow.com/a/49279641</a> for rate measurement:</p>
+<div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">redisStreamsFlow</span> <span class="k">=</span> <span class="nc">RedisStreamsFlow</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="n">asyncCommands</span><span class="o">,</span> <span class="s">&#34;testStream&#34;</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">messageSource</span> <span class="k">=</span> <span class="nc">Source</span><span class="o">.</span><span class="n">repeat</span><span class="o">(</span><span class="nc">Map</span><span class="o">(</span><span class="s">&#34;key&#34;</span> <span class="o">-&gt;</span> <span class="s">&#34;test&#34;</span><span class="o">)).</span><span class="n">limit</span><span class="o">(</span><span class="mi">10</span><span class="n">_000_000</span><span class="o">)</span>
+
+<span class="n">messageSource</span>
+  <span class="o">.</span><span class="n">via</span><span class="o">(</span><span class="n">redisStreamsFlow</span><span class="o">)</span>
+  <span class="o">.</span><span class="n">conflateWithSeed</span><span class="o">(</span><span class="k">_</span> <span class="k">=&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span> <span class="k">case</span> <span class="o">(</span><span class="n">acc</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">acc</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">}</span>
+  <span class="o">.</span><span class="n">zip</span><span class="o">(</span><span class="nc">Source</span><span class="o">.</span><span class="n">tick</span><span class="o">(</span><span class="mf">1.</span><span class="n">second</span><span class="o">,</span> <span class="mf">1.</span><span class="n">second</span><span class="o">,</span> <span class="nc">NotUsed</span><span class="o">))</span>
+  <span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">_1</span><span class="o">)</span>
+  <span class="o">.</span><span class="n">toMat</span><span class="o">(</span><span class="nc">Sink</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span><span class="n">i</span> <span class="k">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="s">s&#34;</span><span class="si">$i</span><span class="s"> elements/second producer&#34;</span><span class="o">)))(</span><span class="nc">Keep</span><span class="o">.</span><span class="n">right</span><span class="o">)</span>
+  <span class="o">.</span><span class="n">run</span><span class="o">()</span>
+</code></pre></div><p>Then we can take the same stream and consume the produces message, acknowledging them as we go along:</p>
+<div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">redisStreamsSource</span> <span class="k">=</span> <span class="nc">RedisStreamsSource</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="n">asyncCommands</span><span class="o">,</span>
+  <span class="s">&#34;testStream&#34;</span><span class="o">,</span>
+  <span class="s">&#34;testGroup&#34;</span><span class="o">,</span>
+  <span class="s">&#34;testConsumer&#34;</span><span class="o">)</span>
+
+<span class="k">val</span> <span class="n">redisStreamAckSink</span> <span class="k">=</span> <span class="nc">RedisStreamsAckSink</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="n">asyncCommands</span><span class="o">,</span> <span class="s">&#34;testGroup&#34;</span><span class="o">,</span> <span class="s">&#34;testStream&#34;</span><span class="o">)</span>
+
+<span class="n">redisStreamsSource</span>
+  <span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">getId</span><span class="o">)</span>
+  <span class="o">.</span><span class="n">to</span><span class="o">(</span><span class="n">redisStreamAckSink</span><span class="o">)</span>
+  <span class="o">.</span><span class="n">run</span><span class="o">()</span>
+</code></pre></div><p>The code for this is in <a href="https://github.com/vlukiyanov/akka-redis-streams-example/blob/main/src/main/scala/example/AckExample.scala"><code>AckExample.scala</code></a>, running this code we eventually see that all the message have been acknowledged by running <a href="https://redis.io/commands/xpending">XPENDING</a>:</p>
+<pre><code>127.0.0.1:6379&gt; XPENDING testStream testGroup
+1) (integer) 0
+2) (nil)
+3) (nil)
+4) (nil)
+</code></pre><p>This means that the code has successfully finished, and we have the example app; hopefully this can be used as a springboard to exploring other features in Redis stream using Akka streams, and possibly application for this in-memory log data structure.</p>
+</article>
+
+        </main><footer id="footer">
+    Copyright © 2020 Vladimir Lukiyanov
+</footer>
+</body>
+</html>
