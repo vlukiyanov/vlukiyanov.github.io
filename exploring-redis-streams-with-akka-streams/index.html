@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/exploring-redis-streams-with-akka-streams\/",
-    "wordCount" : "1079",
+    "wordCount" : "1083",
     "genre" : [ "akka" , "redis" , "streams" , "scala" , "exploration" ],
     "keywords" : [ ]
     }
@@ -111,7 +111,7 @@ graph LR;
 </div>
 
 </div>
-<p>We will optimise this app for throughput to imitate multiple simultaneous consumers, in particular using parallelism with <code>.mapAsync(4)</code>. Note that the optimisations are unlikely to transfer equally to all environments, this is simply to saturate Redis throughput in a single app.</p>
+<p>We will optimise this app for throughput to imitate multiple simultaneous consumers and producers, in particular using parallelism with <code>.mapAsync(4)</code> to saturate Redis. Note that the optimisations are unlikely to transfer equally to all environments, this is simply to optimise throughput in a single app.</p>
 <p>Using Redis streams with Akka streams is possible using one of the Redis client libraries for Java in Scala, in particular <a href="https://github.com/redisson/redisson">Redisson</a> and <a href="https://github.com/lettuce-io/lettuce-core">Lettuce</a>; in the following examples we use the simple async version of the latter. Note that Lettuce also has a <a href="https://github.com/lettuce-io/lettuce-core/wiki/Reactive-API-(5.0)">reactive interface</a> using <a href="http://projectreactor.io/">Project Reactor</a>, this interface can be used within Akka Streams via the <a href="https://doc.akka.io/docs/akka/current/stream/reactive-streams-interop.html">reactive streams interop</a> and might be suitable for a number of actual production applications and environments.</p>
 <h1 id="setting-up">Setting up</h1>
 <p>To experiment with Redis streams we need a local server, using Docker some variation of <code>docker run --name redis-local -p 6379:6379 -d redis</code> will setup a local server on port <code>6379</code>; if you adjust the port number, using say <code>-p 6380:6379</code>, you will then need to change the connection string to match (controlled by the environment variable <code>REDIS_URL</code>)</p>
