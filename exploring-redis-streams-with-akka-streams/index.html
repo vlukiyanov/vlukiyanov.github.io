@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/exploring-redis-streams-with-akka-streams\/",
-    "wordCount" : "1122",
+    "wordCount" : "1121",
     "genre" : [ "akka" , "redis" , "streams" , "scala" , "exploration" ],
     "keywords" : [ ]
     }
@@ -171,7 +171,7 @@ graph LR;
 <span class="o">}</span>
 </code></pre></div><p>The parameters here need tuning, but this will poll Redis at some fixed interval, then flatten the lists of messages using <code>.mapConcat(_.asScala.toList)</code>. On my local system setting parallelism to 4 increased throughput to a maximum, given Redis is single threaded this is again something to note, though may not be relevant in actual production scenarios. The code for this is in <a href="https://github.com/vlukiyanov/akka-redis-streams-example/blob/main/src/main/scala/api/RedisStreamsSource.scala"><code>RedisStreamsSource.scala</code></a> and <a href="https://github.com/vlukiyanov/akka-redis-streams-example/blob/main/src/main/scala/example/ConsumerExample.scala"><code>ConsumerExample.scala</code></a>.</p>
 <h1 id="acknowledging-messages">Acknowledging messages</h1>
-<p>When a consumer in a consumer group has successfully processed a message it should indicate this by sending an <a href="https://redis.io/commands/xack">XACK</a>; sending <a href="https://redis.io/commands/xack">XACK</a> removes the message from the pending list. As a message is uniquely determined by a string id, this process can be modelled as <code>Sink[String, NotUsed]</code>, and in implementation is something like the following:</p>
+<p>When a consumer in a consumer group has successfully processed a message it should indicate this by sending an <a href="https://redis.io/commands/xack">XACK</a>; sending <a href="https://redis.io/commands/xack">XACK</a> removes the message from the pending list. As a message is uniquely determined by a string id this process can be modelled as <code>Sink[String, NotUsed]</code>. An implementation is something like the following:</p>
 <div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">object</span> <span class="nc">RedisStreamsAckSink</span> <span class="o">{</span>
   <span class="k">def</span> <span class="n">create</span><span class="o">(</span><span class="n">redis</span><span class="k">:</span> <span class="kt">RedisAsyncCommands</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">],</span>
              <span class="n">group</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
@@ -214,7 +214,7 @@ graph LR;
 2) (nil)
 3) (nil)
 4) (nil)
-</code></pre><p>This means that the code has successfully finished, and we have the example app; hopefully this can be used as a springboard to exploring other features in Redis streams using Akka streams, and possibly application for this in-memory log data structure.</p>
+</code></pre><p>This means that the code has successfully finished, and we have the example app; hopefully this can be used as a springboard to exploring other features in Redis streams using Akka streams, and possibly applications for this in-memory log data structure.</p>
 </article>
 
         </main><footer id="footer">
