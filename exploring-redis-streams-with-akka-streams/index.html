@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/exploring-redis-streams-with-akka-streams\/",
-    "wordCount" : "1083",
+    "wordCount" : "1085",
     "genre" : [ "akka" , "redis" , "streams" , "scala" , "exploration" ],
     "keywords" : [ ]
     }
@@ -187,7 +187,9 @@ graph LR;
 </code></pre></div><h1 id="threading-it-all-together">Threading it all together</h1>
 <p>We&rsquo;re now able to create a full example which simultaneously produces and consumes messages, afterwards acknowledging them. First the producer, this includes a snippet from <a href="https://stackoverflow.com/a/49279641">https://stackoverflow.com/a/49279641</a> for rate measurement:</p>
 <div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">redisStreamsFlow</span> <span class="k">=</span> <span class="nc">RedisStreamsFlow</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="n">asyncCommands</span><span class="o">,</span> <span class="s">&#34;testStream&#34;</span><span class="o">)</span>
-<span class="k">val</span> <span class="n">messageSource</span> <span class="k">=</span> <span class="nc">Source</span><span class="o">.</span><span class="n">repeat</span><span class="o">(</span><span class="nc">Map</span><span class="o">(</span><span class="s">&#34;key&#34;</span> <span class="o">-&gt;</span> <span class="s">&#34;test&#34;</span><span class="o">)).</span><span class="n">limit</span><span class="o">(</span><span class="mi">10</span><span class="n">_000_000</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">messageSource</span> <span class="k">=</span> <span class="nc">Source</span>
+   <span class="o">.</span><span class="n">repeat</span><span class="o">(</span><span class="nc">Map</span><span class="o">(</span><span class="s">&#34;key&#34;</span> <span class="o">-&gt;</span> <span class="s">&#34;test&#34;</span><span class="o">))</span>
+   <span class="o">.</span><span class="n">limit</span><span class="o">(</span><span class="mi">10</span><span class="n">_000_000</span><span class="o">)</span>
 
 <span class="n">messageSource</span>
   <span class="o">.</span><span class="n">via</span><span class="o">(</span><span class="n">redisStreamsFlow</span><span class="o">)</span>
@@ -196,7 +198,7 @@ graph LR;
   <span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">_1</span><span class="o">)</span>
   <span class="o">.</span><span class="n">toMat</span><span class="o">(</span><span class="nc">Sink</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span><span class="n">i</span> <span class="k">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="s">s&#34;</span><span class="si">$i</span><span class="s"> elements/second producer&#34;</span><span class="o">)))(</span><span class="nc">Keep</span><span class="o">.</span><span class="n">right</span><span class="o">)</span>
   <span class="o">.</span><span class="n">run</span><span class="o">()</span>
-</code></pre></div><p>Then we can take the same stream and consume the produces message, acknowledging them as we go along:</p>
+</code></pre></div><p>Then we can take the same stream and consume the produced message, acknowledging them as we go along:</p>
 <div class="highlight"><pre class="chroma"><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">redisStreamsSource</span> <span class="k">=</span> <span class="nc">RedisStreamsSource</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="n">asyncCommands</span><span class="o">,</span>
   <span class="s">&#34;testStream&#34;</span><span class="o">,</span>
   <span class="s">&#34;testGroup&#34;</span><span class="o">,</span>
