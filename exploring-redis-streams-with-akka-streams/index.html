@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/exploring-redis-streams-with-akka-streams\/",
-    "wordCount" : "1085",
+    "wordCount" : "1056",
     "genre" : [ "akka" , "redis" , "streams" , "scala" , "exploration" ],
     "keywords" : [ ]
     }
@@ -82,13 +82,14 @@
 <main id="content">
 <article>
     <header id="post-header">
-        <h1>Exploring Redis streams with Akka streams</h1><time>November 27, 2020</time></header><p>In this post we will explore using Redis streams in Akka streams using the popular Java library <a href="https://github.com/lettuce-io/lettuce-core">Lettuce</a>; Redis is an in-memory database used in distributed systems, and Akka streams is a popular reactive streams implementation for Scala. The streams data structure in Redis implements a persistent log with support for consumer groups, this is a data structure designed to fan out messages to multiple consumers and there is a <a href="https://redis.io/topics/streams-intro">good but lengthy introduction to Redis streams on the Redis website</a>, but roughly speaking there are three classes of operation:</p>
+        <h1>Exploring Redis streams with Akka streams</h1><time>November 27, 2020</time></header><p>Redis is an in-memory database and Akka streams is a popular reactive streams implementation for Scala. In this post we explore a simple end-to-end toy example to demonstrate using Redis streams in Akka streams via the popular Java library <a href="https://github.com/lettuce-io/lettuce-core">Lettuce</a>.</p>
+<p>The Redis streams data structure implements a persistent log with support for consumer groups, and is designed to fan out messages to multiple consumers. There is a <a href="https://redis.io/topics/streams-intro">good but lengthy introduction to Redis streams on the Redis website</a> though roughly speaking there are three key operations:</p>
 <ul>
-<li><strong>Adding messages to the stream</strong> using the <a href="https://redis.io/commands/xadd">XADD</a> operation; each message has a unique ID, which is usually generated automatically by the Redis server and returned to the caller.</li>
-<li><strong>Reading messages from the stream</strong> using <a href="https://redis.io/commands/xread">XREAD</a> and <a href="https://redis.io/commands/xreadgroup">XREADGROUP</a> operations. There are various modes here, from just reading a given message by ID, to reading message using consumer groups.</li>
-<li><strong>Dealing with consumer groups, consumers, and acknowledging messages</strong> using operations like <a href="https://redis.io/commands/xack">XACK</a>, <a href="https://redis.io/commands/xgroup">XGROUP</a>, and <a href="https://redis.io/commands/xgroup">XPENDING</a>.</li>
+<li><strong>Adding messages to the stream</strong> using the <a href="https://redis.io/commands/xadd">XADD</a> operation. Each message has a unique ID, which is usually generated automatically by the Redis server and returned to the caller.</li>
+<li><strong>Reading messages from the stream</strong> using <a href="https://redis.io/commands/xread">XREAD</a> and <a href="https://redis.io/commands/xreadgroup">XREADGROUP</a> operations. There are various modes, from just reading a given message by ID, to reading message using consumer groups.</li>
+<li><strong>Dealing with consumer groups, consumers, and acknowledging messages</strong> using operations like <a href="https://redis.io/commands/xack">XACK</a>, <a href="https://redis.io/commands/xgroup">XGROUP</a>, and <a href="https://redis.io/commands/xgroup">XPENDING</a>. Consumer groups ensure guarantees around delivery, for example the ability to inspect messages that were consumed but not acknowledged by consumers - properties that are essential for building reliable systems.</li>
 </ul>
-<p>In essence consumer groups allow fanning out messages to multiple consumers with guarantees around delivery, and the ability to inspect messages that were consumed but not acknowledged by consumers - properties that are essential for building reliable systems. To explore the Redis streams API we will create a simple app which will produce, consume and then acknowledge messages, a rough outline is the following:</p>
+<p>Let&rsquo;s start with a rough outline of our simple app:</p>
 <div style="text-align: center;">
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.3/mermaid.js"></script>

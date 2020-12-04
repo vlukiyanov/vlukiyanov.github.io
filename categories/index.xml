@@ -17,7 +17,8 @@
       <pubDate>Fri, 27 Nov 2020 00:00:00 +0000</pubDate>
       
       <guid>https://vlukiyanov.github.io/exploring-redis-streams-with-akka-streams/</guid>
-      <description>In this post we will explore using Redis streams in Akka streams using the popular Java library Lettuce; Redis is an in-memory database used in distributed systems, and Akka streams is a popular reactive streams implementation for Scala. The streams data structure in Redis implements a persistent log with support for consumer groups, this is a data structure designed to fan out messages to multiple consumers and there is a good but lengthy introduction to Redis streams on the Redis website, but roughly speaking there are three classes of operation:</description>
+      <description>Redis is an in-memory database and Akka streams is a popular reactive streams implementation for Scala. In this post we explore a simple end-to-end toy example to demonstrate using Redis streams in Akka streams via the popular Java library Lettuce.
+The Redis streams data structure implements a persistent log with support for consumer groups, and is designed to fan out messages to multiple consumers. There is a good but lengthy introduction to Redis streams on the Redis website though roughly speaking there are three key operations:</description>
     </item>
     
     
