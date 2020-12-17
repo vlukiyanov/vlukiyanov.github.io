@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Vladimir Lukiyanov">
+    
+    <link rel="shortcut icon" href="https://vlukiyanov.github.io/favicon.ico">
+    
+    <link rel="stylesheet" href="/css/style.min.css">
+
+    <title>Data from APIs in Python, a beyond the basics guide for data scientists</title>
+
+    <meta name="google-site-verification" content="NlNPWpNakpqSj24UEnHW1YwvGN4Kb7zNvNh82bAByzQ" />
+
+    
+
+
+<script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "articleSection": "posts",
+        "name": "Data from APIs in Python, a beyond the basics guide for data scientists",
+        "headline": "Data from APIs in Python, a beyond the basics guide for data scientists",
+        "alternativeHeadline": "",
+        "description": "There are a number of tutorials and guides on gathering data from APIs in Python, whether for engineers or data scientists. There isn\x26rsquo;t a great deal repeating the basics. Instead, this guide presents some ideas, components, and recipes which tackle issues a data scientist may encounter extending their code to run in a more robust setting.\nSetting up We are going to be using the UK government COVID-19 API as an example.",
+        "inLanguage": "en-GB",
+    "isFamilyFriendly": "true",
+    "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/vlukiyanov.github.io\/data-from-apis-in-python-a-beyond-the-basics-guide-for-data-scientists\/"
+    },
+    "author" : {
+    "@type": "Person",
+    "name": "Vladimir Lukiyanov"
+    },
+    "creator" : {
+    "@type": "Person",
+    "name": "Vladimir Lukiyanov"
+    },
+    "accountablePerson" : {
+    "@type": "Person",
+    "name": "Vladimir Lukiyanov"
+    },
+    "copyrightHolder" : "Vladimir Lukiyanov",
+    "copyrightYear" : "2020",
+    "dateCreated": "2020-12-12T00:00:00.00Z",
+    "datePublished": "2020-12-12T00:00:00.00Z",
+    "dateModified": "2020-12-12T00:00:00.00Z",
+    "publisher":{
+    "@type":"Organization",
+    "name": "Vladimir Lukiyanov",
+    "url": "https://vlukiyanov.github.io",
+    "logo": {
+    "@type": "ImageObject",
+    "url": "https:\/\/vlukiyanov.github.io",
+    "width":"32",
+    "height":"32"
+    }
+    },
+    "image": "https://vlukiyanov.github.io",
+    "url" : "https:\/\/vlukiyanov.github.io\/data-from-apis-in-python-a-beyond-the-basics-guide-for-data-scientists\/",
+    "wordCount" : "185",
+    "genre" : [ "python" , "tutorial" , "advanced" , "api" , "rest" ],
+    "keywords" : [ ]
+    }
+</script>
+
+</head>
+<body><header id="banner">
+    <h2><a href="https://vlukiyanov.github.io">Vladimir Lukiyanov</a></h2>
+    <nav>
+        <ul>
+            <li>
+                <a href="/" title="posts">posts</a>
+            </li><li>
+                <a href="/about/" title="about">about</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main id="content">
+<article>
+    <header id="post-header">
+        <h1>Data from APIs in Python, a beyond the basics guide for data scientists</h1><time>December 12, 2020</time></header><p>There are a number of tutorials and guides on gathering data from APIs in Python, whether for engineers or data scientists. There isn&rsquo;t a great deal repeating the basics. Instead, this guide presents some ideas, components, and recipes which tackle issues a data scientist may encounter extending their code to run in a more robust setting.</p>
+<h1 id="setting-up">Setting up</h1>
+<p>We are going to be using the <a href="https://coronavirus.data.gov.uk/details/developers-guide">UK government COVID-19 API</a> as an example. This API already has an excellent SDK <a href="https://github.com/publichealthengland/coronavirus-dashboard-api-python-sdk">publichealthengland/coronavirus-dashboard-api-python-sdk</a> but is nevertheless a good API to demonstrate the various ideas and recipes in this article; in general, if there is a good SDK for the API you are using, use the SDK.</p>
+<h1 id="basic-documentation-with-type-hints">Basic documentation with type hints</h1>
+<h1 id="url-structures-with-yarl">URL structures with <code>yarl</code></h1>
+<p>In the <a href="https://coronavirus.data.gov.uk/details/developers-guide#version">API documentation</a> we glean that the main endpoint for the UK government COVID-19 API is <code>https://api.coronavirus.data.gov.uk/v1/data</code> and that a generic template for requests is <code>/v1/data?filters=&lt;string&gt;&amp;structure=&lt;string&gt;[&amp;latestBy=&lt;string&gt;][&amp;format=&lt;string&gt;][&amp;page=&lt;number&gt;]</code>; like most data gathering APIs this basically implements a GET request the query parameters.</p>
+<h1 id="rate-limits-with-ratelimit">Rate limits with <code>ratelimit</code></h1>
+<h1 id="handling-failures-with-retry">Handling failures with <code>retry</code></h1>
+<h1 id="handling-pagination-with-iterators">Handling pagination with iterators</h1>
+<h1 id="parsing-with-pydantic">Parsing with <code>pydantic</code></h1>
+<h1 id="testing-with-requests-mock">Testing with <code>requests-mock</code></h1>
+<h1 id="threading-it-all-together">Threading it all together</h1>
+</article>
+
+        </main><footer id="footer">
+    Copyright © 2020 Vladimir Lukiyanov
+</footer>
+</body>
+</html>
