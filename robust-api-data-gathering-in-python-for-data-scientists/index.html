@@ -274,10 +274,8 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 
 <span class="kn">from</span> <span class="nn">secrets</span> <span class="k">import</span> <span class="n">APP_ID</span><span class="p">,</span> <span class="n">APP_KEY</span>
 
-
 <span class="k">def</span> <span class="nf">get_id_key</span><span class="p">():</span>
     <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;app_id&#34;</span><span class="p">:</span> <span class="n">APP_ID</span><span class="p">,</span> <span class="s2">&#34;app_key&#34;</span><span class="p">:</span> <span class="n">APP_KEY</span><span class="p">}</span>
-
 
 <span class="nd">@retry</span><span class="p">(</span>
     <span class="n">wait</span><span class="o">=</span><span class="n">wait_exponential</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
@@ -292,9 +290,7 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 <span class="k">def</span> <span class="nf">call_get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">URL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">update_query</span><span class="p">(</span><span class="n">get_id_key</span><span class="p">()))</span><span class="o">.</span><span class="n">text</span>
 
-
 <span class="n">API_ENDPOINT</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="s2">&#34;https://api.tfl.gov.uk/&#34;</span><span class="p">)</span>
-
 
 <span class="nd">@lru_cache</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">tube_line_ids</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -305,12 +301,10 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
         <span class="p">)</span>
     <span class="p">]</span>
 
-
 <span class="k">class</span> <span class="nc">LineStopPointInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">distance</span><span class="p">:</span> <span class="n">confloat</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># from the centre of London, (51.509865, -0.118092)</span>
     <span class="n">connections</span><span class="p">:</span> <span class="n">conint</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
 
 <span class="k">def</span> <span class="nf">parse_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LineStopPointInfo</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">LineStopPointInfo</span><span class="p">(</span>
@@ -326,7 +320,6 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
         <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># one result is always for the given line</span>
     <span class="p">)</span>
 
-
 <span class="k">def</span> <span class="nf">line_stop_points</span><span class="p">(</span><span class="n">line_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LineStopPointInfo</span><span class="p">]:</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">parse_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -335,10 +328,8 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
         <span class="p">)</span>
     <span class="p">]</span>
 
-
 <span class="k">def</span> <span class="nf">line_stop_df</span><span class="p">(</span><span class="n">line_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">item</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">line_stop_points</span><span class="p">(</span><span class="n">line_id</span><span class="p">)])</span>
-
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">line_stop_df</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">tube_line_ids</span><span class="p">()])</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s2">&#34;name&#34;</span><span class="p">)</span>
 
