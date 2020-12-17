@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/robust-api-data-gathering-in-python-for-data-scientists\/",
-    "wordCount" : "1902",
+    "wordCount" : "1909",
     "genre" : [ "python" , "tutorial" , "advanced" , "api" , "rest" , "pydantic" , "yarl" , "pandas" ],
     "keywords" : [ ]
     }
@@ -154,8 +154,7 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 <span class="nd">@limits</span><span class="p">(</span><span class="n">calls</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">call_get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">URL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">update_query</span><span class="p">(</span><span class="n">get_id_key</span><span class="p">()))</span><span class="o">.</span><span class="n">text</span>
-</code></pre></div><p>The first <code>@retry</code> above the <code>@limits</code> will be passed through first, and this will catch the <code>RateLimitException</code> and retry every second for a maximum of 60 seconds, the second decorator will soak up any other errors. One side effect is the <code>RateLimitException</code> will itself be retries up to 3 times. With limits and retries implemented, the extract part of our code should be able to run unsupervised, so we are able to gather the data we need for our analysis.
-<a href="https://pydantic-docs.helpmanual.io/">https://pydantic-docs.helpmanual.io/</a></p>
+</code></pre></div><p>The first <code>@retry</code> decorator above the <code>@limits</code> will be passed through the one above. This first <code>@retry</code> this will catch the <code>RateLimitException</code> and retry every second for a maximum of 60 seconds, the second <code>@retry</code> will soak up any other errors. One side effect is the retrying of the <code>RateLimitException</code> will itself be retries up to 3 times. With limits and retries implemented, the extract part of our code should be able to run unsupervised, so we are able to gather the data we need for our analysis.</p>
 <h1 id="parsing-with-pydantic-and-loading-with-pandas">Parsing with <code>pydantic</code> and loading with <code>pandas</code></h1>
 <p>It is rare for an API to return data in the format we need to perform analysis<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>, so there is usually an initial transformation stage where we turn the JSON (or if you&rsquo;re unlucky XML) data into a cleaned up row in a table. <a href="https://pydantic-docs.helpmanual.io/">Pydantic</a> is a good library for initial data processing to a fixed self-documenting schema, a more powerful alternative to <a href="https://docs.python.org/3/library/dataclasses.html">dataclasses</a>.</p>
 <p>The <a href="https://pydantic-docs.helpmanual.io/"><code>pydantic</code> documentation</a> is easy to read, and goes through most of the ideas.If we go back to <code>line_stop_points</code> defined as</p>
