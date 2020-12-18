@@ -6,21 +6,9 @@
     <description>Recent content on Vladimir Lukiyanov</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-GB</language>
-    <lastBuildDate>Sat, 12 Dec 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 27 Nov 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://vlukiyanov.github.io/index.xml" rel="self" type="application/rss+xml" />
-    
-    
-    
-    <item>
-      <title>Robust API data gathering in Python for data scientists</title>
-      <link>https://vlukiyanov.github.io/robust-api-data-gathering-in-python-for-data-scientists/</link>
-      <pubDate>Sat, 12 Dec 2020 00:00:00 +0000</pubDate>
-      
-      <guid>https://vlukiyanov.github.io/robust-api-data-gathering-in-python-for-data-scientists/</guid>
-      <description>There are a plenty of tutorials and guides on gathering data from REST APIs using Python, especially for data scientists; the aim of this tutorial is to present some ideas, components, and recipes which tackle issues a data scientist may encounter extending their code to run in a more robust setting. Using these techniques, data science code can be a little closer to data engineering.
-Techniques aside, using APIs usually involves navigating incoherent documentation, a small myriad of standards (most of which aren&amp;rsquo;t followed), and often struggling with existing SDKs - the advantage of HTTP based APIs is it is easy to write your own code to pull in the data, and with the right Python practices easy to solidify it.</description>
-    </item>
     
     
     
