@@ -23,7 +23,7 @@
         "name": "Robust API data gathering in Python for data scientists",
         "headline": "Robust API data gathering in Python for data scientists",
         "alternativeHeadline": "",
-        "description": "There are a plenty of tutorials and guides on gathering data from REST APIs using Python, especially for data scientists; the aim of this tutorial is to present some ideas, components, and recipes which tackle issues a data scientist may encounter extending their code to run in a more robust setting. Using these techniques, data science code can be a little closer to data engineering.\nTechniques aside, using APIs usually involves navigating incoherent documentation, a small myriad of standards (most of which aren\x26rsquo;t followed), and often struggling with existing SDKs - the advantage of HTTP based APIs is it is easy to write your own code to pull in the data, and with the right Python practices easy to solidify it.",
+        "description": "There are a plenty of tutorials and guides on gathering data from REST APIs using Python, especially for data scientists; the aim of this tutorial is to present some ideas, components, and recipes which tackle issues a data scientist may find extending their code to run in a more robust setting. Using these techniques, data science code can be a little closer to data engineering.\nTechniques aside, using HTTP APIs usually involves navigating incoherent documentation, a small myriad of standards (most of which aren\x26rsquo;t followed), and often struggling with existing SDKs.",
         "inLanguage": "en-GB",
     "isFamilyFriendly": "true",
     "mainEntityOfPage": {
@@ -44,9 +44,9 @@
     },
     "copyrightHolder" : "Vladimir Lukiyanov",
     "copyrightYear" : "2020",
-    "dateCreated": "2020-12-12T00:00:00.00Z",
-    "datePublished": "2020-12-12T00:00:00.00Z",
-    "dateModified": "2020-12-16T00:00:00.00Z",
+    "dateCreated": "2020-12-18T00:00:00.00Z",
+    "datePublished": "2020-12-18T00:00:00.00Z",
+    "dateModified": "2020-12-18T00:00:00.00Z",
     "publisher":{
     "@type":"Organization",
     "name": "Vladimir Lukiyanov",
@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/robust-api-data-gathering-in-python-for-data-scientists\/",
-    "wordCount" : "1909",
+    "wordCount" : "1957",
     "genre" : [ "python" , "tutorial" , "advanced" , "api" , "rest" , "pydantic" , "yarl" , "pandas" ],
     "keywords" : [ ]
     }
@@ -82,22 +82,22 @@
 <main id="content">
 <article>
     <header id="post-header">
-        <h1>Robust API data gathering in Python for data scientists</h1><time>December 12, 2020</time></header><p>There are a plenty of tutorials and guides on gathering data from REST APIs using Python, especially for data scientists; the aim of this tutorial is to present some ideas, components, and recipes which tackle issues a data scientist may encounter extending their code to run in a more robust setting. Using these techniques, data science code can be a little closer to data engineering.</p>
-<p>Techniques aside, using APIs usually involves navigating incoherent documentation, a small myriad of standards (most of which aren&rsquo;t followed), and often struggling with existing SDKs - the advantage of HTTP based APIs is it is easy to write your own code to pull in the data, and with the right Python practices easy to solidify it.</p>
+        <h1>Robust API data gathering in Python for data scientists</h1><time>December 18, 2020</time></header><p>There are a plenty of tutorials and guides on gathering data from REST APIs using Python, especially for data scientists; the aim of this tutorial is to present some ideas, components, and recipes which tackle issues a data scientist may find extending their code to run in a more robust setting. Using these techniques, data science code can be a little closer to data engineering.</p>
+<p>Techniques aside, using HTTP APIs usually involves navigating incoherent documentation, a small myriad of standards (most of which aren&rsquo;t followed), and often struggling with existing SDKs. The advantage of HTTP based APIs is it is easy to write your own code to pull in the data, and with the right Python practices easy to solidify it.</p>
 <p>All the code in this article can be found in the <a href="https://github.com/vlukiyanov/blog-examples/tree/main/python-api-examples">python-api-examples</a> folder of <a href="https://github.com/vlukiyanov/blog-examples">vlukiyanov/blog-examples</a> both as a <a href="https://github.com/vlukiyanov/blog-examples/blob/main/python-api-examples/python_api_examples/request.ipynb">Jupyter notebook</a> and an equivalent <a href="https://github.com/vlukiyanov/blog-examples/blob/main/python-api-examples/python_api_examples/request.py">Python file</a>.</p>
 <h1 id="setting-up">Setting up</h1>
-<p>As a running example we are going to answer an example data science question using the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> - we&rsquo;ll analyse the number of connections between tube lines by their distance from the centre of London.</p>
-<p>To gain access to the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> you will need to register for an application key, which consists of an <code>app_id</code> and <code>app_key</code>. It is worth noting that for the <a href="https://api-portal.tfl.gov.uk/">TfL API</a>, response types
-are documented using OpenAPI 3 specifications - a relatively rare but helpful observation which in we ignore<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> - the aim here is to describe a set of general methods, rather than focusing on the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> or writing API SDKs.</p>
+<p>As a running example we are going to answer a data science question using the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> - we&rsquo;ll analyse the number of connections between tube lines by their distance from the centre of London.</p>
+<p>To gain access to the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> you will need to register for an application key on the TfL link, which consists of an <code>app_id</code> and <code>app_key</code>. It is worth noting that the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> response types
+are documented using OpenAPI 3 specifications - a relatively rare but helpful observation which in we ignore<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>. The aim here is to describe a set of general methods, rather than focusing on the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> or general methods of writing API SDKs.</p>
 <h1 id="url-structures-with-yarl">URL structures with <code>yarl</code></h1>
-<p>Manipulating URLs is a common operation when dealing with HTTP APIs, the two most common operations are adding paths to an endpoint and updating query parameters. Whilst you can do this using pure strings, <a href="https://docs.python.org/3/library/urllib.request.html#urllib-examples">urllib</a> or <a href="https://requests.readthedocs.io/en/master/user/quickstart/#passing-parameters-in-urls">requests itself</a>, this can become unwieldy and prone to error. This is especially true when you are building up the URL iteratively. Using <a href="https://github.com/aio-libs/yarl">yarl</a> can often improve this, as the example below demonstrates.</p>
+<p>Manipulating URLs is a common operation when dealing with HTTP APIs. The two most common operations are adding paths to an endpoint and updating query parameters. Whilst you can do this using pure strings, <a href="https://docs.python.org/3/library/urllib.request.html#urllib-examples">urllib</a> or <a href="https://requests.readthedocs.io/en/master/user/quickstart/#passing-parameters-in-urls">requests itself</a>, this can become unwieldy and prone to error; this is especially true when you are building up the URL iteratively. Using <a href="https://github.com/aio-libs/yarl">yarl</a> can often improve this:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">yarl</span> <span class="k">import</span> <span class="n">URL</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">API_ENDPOINT</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="s2">&#34;https://api.tfl.gov.uk/&#34;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">API_ENDPOINT</span> <span class="o">/</span> <span class="s2">&#34;Line&#34;</span> <span class="o">/</span> <span class="s2">&#34;victoria&#34;</span> <span class="o">/</span> <span class="s2">&#34;StopPoints&#34;</span> 
 <span class="n">URL</span><span class="p">(</span><span class="s1">&#39;https://api.tfl.gov.uk/Line/victoria/StopPoints&#39;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">API_ENDPOINT</span> <span class="o">/</span> <span class="s2">&#34;Line&#34;</span> <span class="o">/</span> <span class="s2">&#34;victoria&#34;</span> <span class="o">/</span> <span class="s2">&#34;StopPoints&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">update_query</span><span class="p">({</span><span class="s2">&#34;app_id&#34;</span><span class="p">:</span> <span class="s2">&#34;...&#34;</span><span class="p">,</span> <span class="s2">&#34;app_key&#34;</span><span class="p">:</span> <span class="s2">&#34;...&#34;</span><span class="p">})</span>
 <span class="n">URL</span><span class="p">(</span><span class="s1">&#39;https://api.tfl.gov.uk/Line/victoria/StopPoints?app_id=...&amp;app_key=...&#39;</span><span class="p">)</span>
-</code></pre></div><p>The <a href="https://yarl.readthedocs.io/en/latest/"><code>yarl</code> documentation</a> is easy to read, and goes through most common operations on URLs. We can use <code>yarl</code> to create a generic function to authenticate our calls to the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> with the query parameters <code>app_id</code> and <code>app_key</code> we noted when registering, this can be done at the very end of a request:</p>
+</code></pre></div><p>The <a href="https://yarl.readthedocs.io/en/latest/"><code>yarl</code> documentation</a> is easy to read, and goes through most common operations on URLs. In our running example we can use <code>yarl</code> to create a generic function to authenticate our calls to the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> with the query parameters <code>app_id</code> and <code>app_key</code> we noted when registering, this can be done at the very end of a request:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">yarl</span> <span class="k">import</span> <span class="n">URL</span>
 
@@ -106,20 +106,20 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 
 <span class="k">def</span> <span class="nf">call_get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">URL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">update_query</span><span class="p">(</span><span class="n">get_id_key</span><span class="p">()))</span><span class="o">.</span><span class="n">text</span>
-</code></pre></div><p>This could then be used to create specialised function sto gather data from particular endpoints:</p>
+</code></pre></div><p>The <code>call_get</code> function can then be used to create specialised functions to gather data from particular endpoints:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="n">API_ENDPOINT</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="s2">&#34;https://api.tfl.gov.uk/&#34;</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">tube_line_ids</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="k">return</span> <span class="p">[</span>
-            <span class="n">item</span><span class="p">[</span><span class="s2">&#34;id&#34;</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
-                <span class="n">call_get</span><span class="p">(</span><span class="n">API_ENDPOINT</span> <span class="o">/</span> <span class="s2">&#34;Line&#34;</span> <span class="o">/</span> <span class="s2">&#34;Mode&#34;</span> <span class="o">/</span> <span class="s2">&#34;tube&#34;</span> <span class="o">/</span> <span class="s2">&#34;Route&#34;</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="p">]</span>
+        <span class="n">item</span><span class="p">[</span><span class="s2">&#34;id&#34;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+            <span class="n">call_get</span><span class="p">(</span><span class="n">API_ENDPOINT</span> <span class="o">/</span> <span class="s2">&#34;Line&#34;</span> <span class="o">/</span> <span class="s2">&#34;Mode&#34;</span> <span class="o">/</span> <span class="s2">&#34;tube&#34;</span> <span class="o">/</span> <span class="s2">&#34;Route&#34;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
 </code></pre></div><p>This function will return the ids of all TfL tube lines which we will use later<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>.</p>
 <h1 id="managing-api-quotas-with-ratelimit">Managing API quotas with <code>ratelimit</code></h1>
-<p>The next stage in improving <code>call_get</code> is to make sure it can operate without rate limit issues. Most APIs have rate limits or quotas to protect their backends from excessive load. These limits are often phrased as a combination of the number of requests in a given time period (e.g. 500 per minute), and the concurrency of your requests (e.g. no more than two requests at any time). When gathering data without concurrency, as is the case with any standard Python code, only the &ldquo;500 per minute&rdquo; type of limit is important, and this is where <a href="https://pypi.org/project/ratelimit/"><code>ratelimit</code></a> can help.</p>
-<p>The <code>ratelimit</code> functionality is imported as a <a href="https://realpython.com/primer-on-python-decorators/">decorator</a>, an advanced language feature which allows modifying the behaviour of a function. For example, to limit our <code>call_get</code> function to a maximum of 500 calls every minute, we write:</p>
+<p>The next stage in improving <code>call_get</code> is making sure it can operate without rate limit issues; basic access to the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> is limited to 500 requests every minute. Most APIs have rate limits or quotas to protect their backends from excessive load. These limits are often phrased as a combination of the number of requests in a given time period (e.g. 500 per minute), and the concurrency of your requests (e.g. no more than two requests at any time). When gathering data without concurrency, as is the case with any standard Python code, only the &ldquo;500 per minute&rdquo; type of limit is important. This is where the <a href="https://pypi.org/project/ratelimit/"><code>ratelimit</code></a> library can help.</p>
+<p>The <code>ratelimit</code> functionality is imported as a <a href="https://realpython.com/primer-on-python-decorators/">decorator</a>, an advanced language feature which modifies the behaviour of a function. For example, to limit our <code>call_get</code> function to a maximum of 500 calls every minute, we write:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">ratelimit</span> <span class="k">import</span> <span class="n">limits</span>
 <span class="kn">from</span> <span class="nn">yarl</span> <span class="k">import</span> <span class="n">URL</span>
@@ -130,10 +130,12 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 <span class="nd">@limits</span><span class="p">(</span><span class="n">calls</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">call_get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">URL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">update_query</span><span class="p">(</span><span class="n">get_id_key</span><span class="p">()))</span><span class="o">.</span><span class="n">text</span>
-</code></pre></div><p>This means that when our code calls <code>call_get</code> with some input, this call is routed through the <code>@limits(calls=500, period=60)</code> decorator which applies the rate limit logic, keeping a counter of calls; if we call <code>call_get</code> more than 500 times in a one-minute interval then an exception <code>ratelimit.RateLimitException</code> will be raised.</p>
+</code></pre></div><p>This means that when our code calls <code>call_get</code> with some input, this call is routed through the <code>@limits(calls=500, period=60)</code> decorator which applies the rate limit logic before calling the body of <code>call_get</code>, keeping a counter of calls; if we call <code>call_get</code> more than 500 times in a one-minute interval then an exception <code>ratelimit.RateLimitException</code> will be raised.</p>
 <h1 id="handling-failures-with-tenacity">Handling failures with <code>tenacity</code></h1>
-<p>Calling an external API can result is a number of errors. A lot of these errors aren&rsquo;t handled by the underlying operating system and are passed to you from <code>requests</code>, and quite a lot of them are retryable. For <code>call_get</code> some examples of errors to retry include, if the server is overloaded and responds with a 500 response, or if your internet connection is interrupted; in addition to these errors, we also have to handle the <code>ratelimit.RateLimitException</code> which will be raised if we make requests too quickly.</p>
-<p>There are a number of Python libraries to choose from, <a href="https://github.com/jd/tenacity"><code>tenacity</code></a> is a maintained and modern library; as with <code>ratelimit</code> it works using a decorator. The <a href="https://tenacity.readthedocs.io/en/latest/"><code>tenacity</code> documentation</a> is easy to read, though the style of the library means you have to do an <code>from tenacity import *</code> import to be able to copy and paste from the examples. To handle the <code>RateLimitException</code> and general exceptions we can write something like this.</p>
+<p>Next we improve the way <code>call_get</code> handles errors. Calling an external API can result is a number of errors. A lot of these errors aren&rsquo;t handled by the underlying operating system and are passed to you from <code>requests</code>, and quite a lot of them are retryable. For <code>call_get</code> some examples of errors to retry include: if the server is overloaded and responds with a 500 response, or if your internet connection is interrupted; in addition to these errors, we also have to handle the <code>ratelimit.RateLimitException</code> which will be raised by the <code>@limits</code> decorator if we make requests too quickly.</p>
+<p>There are a number of Python libraries to choose from, <a href="https://github.com/jd/tenacity"><code>tenacity</code></a> is a maintained and modern library. As with <code>ratelimit</code> it works using a decorator. The <a href="https://tenacity.readthedocs.io/en/latest/"><code>tenacity</code> documentation</a> is easy to read, though the style of the library means you have to do an</p>
+<div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="kn">from</span> <span class="nn">tenacity</span> <span class="k">import</span> <span class="o">*</span>
+</code></pre></div><p>import to be able to copy and paste from the examples. To handle the <code>RateLimitException</code> and general <code>requests</code> exceptions we can write something like this.</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">ratelimit</span> <span class="k">import</span> <span class="n">limits</span><span class="p">,</span> <span class="n">RateLimitException</span>
 <span class="kn">from</span> <span class="nn">tenacity</span> <span class="k">import</span> <span class="o">*</span>
@@ -143,8 +145,14 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
     <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;app_id&#34;</span><span class="p">:</span> <span class="n">APP_ID</span><span class="p">,</span> <span class="s2">&#34;app_key&#34;</span><span class="p">:</span> <span class="n">APP_KEY</span><span class="p">}</span>
 
 <span class="nd">@retry</span><span class="p">(</span>
+    <span class="n">retry</span><span class="o">=</span><span class="n">retry_if_exception_type</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span><span class="p">),</span>
     <span class="n">wait</span><span class="o">=</span><span class="n">wait_exponential</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">stop</span><span class="o">=</span><span class="n">stop_after_attempt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="nd">@retry</span><span class="p">(</span>
+    <span class="n">retry</span><span class="o">=</span><span class="n">retry_if_exception_type</span><span class="p">(</span><span class="n">RateLimitException</span><span class="p">),</span>
+    <span class="n">wait</span><span class="o">=</span><span class="n">wait_fixed</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">stop</span><span class="o">=</span><span class="n">stop_after_delay</span><span class="p">(</span><span class="mi">60</span><span class="p">),</span>
 <span class="p">)</span>
 <span class="nd">@retry</span><span class="p">(</span>
     <span class="n">retry</span><span class="o">=</span><span class="n">retry_if_exception_type</span><span class="p">(</span><span class="n">RateLimitException</span><span class="p">),</span>
@@ -154,10 +162,10 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 <span class="nd">@limits</span><span class="p">(</span><span class="n">calls</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">call_get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">URL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">update_query</span><span class="p">(</span><span class="n">get_id_key</span><span class="p">()))</span><span class="o">.</span><span class="n">text</span>
-</code></pre></div><p>The first <code>@retry</code> decorator above the <code>@limits</code> will be passed through the one above. This first <code>@retry</code> this will catch the <code>RateLimitException</code> and retry every second for a maximum of 60 seconds, the second <code>@retry</code> will soak up any other errors. One side effect is the retrying of the <code>RateLimitException</code> will itself be retries up to 3 times. With limits and retries implemented, the extract part of our code should be able to run unsupervised, so we are able to gather the data we need for our analysis.</p>
+</code></pre></div><p>This first <code>@retry</code> this will catch the <code>RateLimitException</code> and retry every second for a maximum of 60 seconds, the second <code>@retry</code> will soak up <code>requests</code> errors; we assume these are disjoint. With limits and retries implemented, the extract part of our code should be able to run unsupervised, so we are able to gather any data we need for our analysis.</p>
 <h1 id="parsing-with-pydantic-and-loading-with-pandas">Parsing with <code>pydantic</code> and loading with <code>pandas</code></h1>
-<p>It is rare for an API to return data in the format we need to perform analysis<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>, so there is usually an initial transformation stage where we turn the JSON (or if you&rsquo;re unlucky XML) data into a cleaned up row in a table. <a href="https://pydantic-docs.helpmanual.io/">Pydantic</a> is a good library for initial data processing to a fixed self-documenting schema, a more powerful alternative to <a href="https://docs.python.org/3/library/dataclasses.html">dataclasses</a>.</p>
-<p>The <a href="https://pydantic-docs.helpmanual.io/"><code>pydantic</code> documentation</a> is easy to read, and goes through most of the ideas.If we go back to <code>line_stop_points</code> defined as</p>
+<p>It is rare for an API to return data in the format we need to perform our analysis<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>. There is usually an initial transformation stage where we turn the JSON (or if you&rsquo;re unlucky XML) data into a cleaned up row in a table. <a href="https://pydantic-docs.helpmanual.io/">Pydantic</a> is a good library for initial data processing of raw JSON to a fixed self-documenting schema, a more powerful alternative to <a href="https://docs.python.org/3/library/dataclasses.html">dataclasses</a>.</p>
+<p>The <a href="https://pydantic-docs.helpmanual.io/"><code>pydantic</code> documentation</a> is easy to read and goes through most of the fundamental uses of the library. If we define <code>line_stop_points</code> as</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="k">def</span> <span class="nf">line_stop_points</span><span class="p">(</span><span class="n">line_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">call_get</span><span class="p">(</span><span class="n">API_ENDPOINT</span> <span class="o">/</span> <span class="s2">&#34;Line&#34;</span> <span class="o">/</span> <span class="n">line_id</span> <span class="o">/</span> <span class="s2">&#34;StopPoints&#34;</span><span class="p">))</span>
 </code></pre></div><p>then calling this as <code>line_stop_points(&quot;victoria&quot;)</code> we get a list of dictionaries of deeply nested data, for example the first dictionary looks like (with some nesting elided):</p>
@@ -194,19 +202,19 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
     <span class="s2">&#34;lat&#34;</span><span class="p">:</span> <span class="mf">51.586919</span><span class="p">,</span>
     <span class="s2">&#34;lon&#34;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.04115</span><span class="p">,</span>
 <span class="p">}</span>
-</code></pre></div><p>For our analysis the data we want to collect is:</p>
+</code></pre></div><p>For our analysis we want to collect data as:</p>
 <ul>
-<li>Name of the station</li>
-<li>Distance from centre of London</li>
-<li>Number of connecting lines</li>
+<li>Name of the station, as <code>name</code></li>
+<li>Distance from centre of London, as <code>distance</code></li>
+<li>Number of connecting lines, as <code>connections</code></li>
 </ul>
-<p>In <code>pydantic</code> we can represent this as the following class:</p>
+<p>which in <code>pydantic</code> can be represented as:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="k">class</span> <span class="nc">LineStopPointInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">distance</span><span class="p">:</span> <span class="n">confloat</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># from the centre of London, (51.509865, -0.118092)</span>
     <span class="n">connections</span><span class="p">:</span> <span class="n">conint</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</code></pre></div><p>The fields like <code>pydantic.conint</code> and <code>pydantic.confloat</code> both put tighter bounds on the data that this class can store, <code>ge=0</code> means greater or equal to 0; <code>pydantic</code> supports <a href="https://pydantic-docs.helpmanual.io/usage/types/">many of these fields</a>.</p>
-<p>Writing parsing to take the complex JSON into this format is then easy and self-documenting:</p>
+</code></pre></div><p>The fields like <code>pydantic.conint</code> and <code>pydantic.confloat</code> put tight bounds on the data that this class can store, for example <code>ge=0</code> means greater or equal to 0. <code>pydantic</code> supports <a href="https://pydantic-docs.helpmanual.io/usage/types/">many of these fields</a>.</p>
+<p>We can now write parsing to transform a raw JSON into <code>LineStopPointInfo</code> and define <code>line_stop_points</code> to return a list of <code>LineStopPointInfo</code> instead of the raw data:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="k">def</span> <span class="nf">parse_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LineStopPointInfo</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">LineStopPointInfo</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">&#34;commonName&#34;</span><span class="p">],</span>
@@ -227,7 +235,7 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
             <span class="n">call_get</span><span class="p">(</span><span class="n">API_ENDPOINT</span> <span class="o">/</span> <span class="s2">&#34;Line&#34;</span> <span class="o">/</span> <span class="n">line_id</span> <span class="o">/</span> <span class="s2">&#34;StopPoints&#34;</span><span class="p">)</span>
         <span class="p">)</span>
     <span class="p">]</span>
-</code></pre></div><p>Running <code>line_stop_points(&quot;victoria&quot;)</code> we get the following:</p>
+</code></pre></div><p>Running <code>line_stop_points(&quot;victoria&quot;)</code> we now get the following:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="p">[</span>
     <span class="n">LineStopPointInfo</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Blackhorse Road Underground Station&#39;</span><span class="p">,</span>
@@ -246,15 +254,21 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
      <span class="p">),</span>
     <span class="o">...</span>
 <span class="p">]</span>
-</code></pre></div><p>The advantage of this approach is not immediately obvious, especially as our initial parsing transformation is not terribly complicated; however if we try to load data into <code>LineStopPointInfo</code> which doesn&rsquo;t satisfy the schema definition, we will get an error. For example running <code>LineStopPointInfo(name=&quot;test&quot;, distance=0, connections=-1)</code> or <code>LineStopPointInfo(name=&quot;test&quot;, distance=&quot;whatever&quot;, connections=0)</code> will result in an error (note that <code>LineStopPointInfo(name=0, distance=0, connections=0)</code> will <em>not</em>, but this is likely what you would expect when working in Python as <code>0</code> can be coerced to a string)<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>.</p>
-<p>Finally we can load our clean dataset in <code>pandas</code>, the following function will convert the <code>pydantic</code> objects</p>
+</code></pre></div><p>The advantage of this approach is not immediately obvious, especially as our initial parsing transformation is not complicated. However if we try to load data into <code>LineStopPointInfo</code> which doesn&rsquo;t satisfy the schema definition, we will get an error. For example running</p>
+<div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="n">LineStopPointInfo</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&#34;test&#34;</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">connections</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div><p>or</p>
+<div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="n">LineStopPointInfo</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&#34;test&#34;</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="s2">&#34;whatever&#34;</span><span class="p">,</span> <span class="n">connections</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div><p>will result in an error (note that <code>LineStopPointInfo(name=0, distance=0, connections=0)</code> will <em>not</em>, but this is likely what you would expect when working in Python as <code>0</code> can be coerced to a string)<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>.</p>
+<p>As a final stage in answering our original data science question we can load our cleaned dataset in <code>pandas</code>, the following function will convert the <code>pydantic</code> objects into <code>pandas</code> rows:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="k">def</span> <span class="nf">line_stop_df</span><span class="p">(</span><span class="n">line_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">item</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">line_stop_points</span><span class="p">(</span><span class="n">line_id</span><span class="p">)])</span>
-</code></pre></div><p>Putting this all together as <code>pd.concat([line_stop_df(line) for line in tube_line_ids()])).drop_duplicates(&quot;name&quot;)</code> we have the following output. This box plot shows the distribution of tube stations distances by their number of connections - there is mostly a clear (and boring) correlation, stations with many tube line connections are closer to the centre.</p>
+</code></pre></div><p>Iterating over all the tube lines we gathered earlier in <code>tube_line_ids</code>, we get</p>
+<div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">line_stop_df</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">tube_line_ids</span><span class="p">()]))</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s2">&#34;name&#34;</span><span class="p">)</span>
+</code></pre></div><p>From this we can generate a box plot which shows the distribution of tube stations distances by their number of connections - there is mostly a clear (and boring) correlation, stations with many tube line connections are closer to the centre.</p>
 <div style="text-align: center;">
 <p><img src="/data-from-apis-parsing-data-science-1.png#center" alt="Graph showing distribution of distance by number of connections"></p>
 </div>
-<p>The two outliers are Baker Street (5 lines) and King&rsquo;s Cross St Pancras (6 lines).</p>
+<p>The two outliers are Baker Street (5 lines so 4 cconnections) and King&rsquo;s Cross St Pancras (6 lines so 5 connections).</p>
 <p>Here is the final code for our pipeline.</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">lru_cache</span>
@@ -278,6 +292,7 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
     <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;app_id&#34;</span><span class="p">:</span> <span class="n">APP_ID</span><span class="p">,</span> <span class="s2">&#34;app_key&#34;</span><span class="p">:</span> <span class="n">APP_KEY</span><span class="p">}</span>
 
 <span class="nd">@retry</span><span class="p">(</span>
+    <span class="n">retry</span><span class="o">=</span><span class="n">retry_if_exception_type</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span><span class="p">),</span>
     <span class="n">wait</span><span class="o">=</span><span class="n">wait_exponential</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">stop</span><span class="o">=</span><span class="n">stop_after_attempt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
 <span class="p">)</span>
@@ -347,13 +362,13 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 <hr>
 <ol>
 <li id="fn:1" role="doc-endnote">
-<p>Not that if we were building an SDK for the TfL API or creating a software integration, then the OpenAPI 3 specifications mentioned above can be used to auto-generate classes in our code; you can read about this for for Pydantic, see the <a href="https://pydantic-docs.helpmanual.io/datamodel_code_generator/"><code>datamodel-codegen</code> library</a>. <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>If we were building an SDK for the TfL API or creating a software integration, then the OpenAPI 3 specifications can be used to auto-generate classes in our code. You can read about this for <code>pydantic</code> in the <a href="https://pydantic-docs.helpmanual.io/datamodel_code_generator/"><code>datamodel-codegen</code> library</a>. <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:2" role="doc-endnote">
-<p>Given this data is static, we could use the <code>functools.lru_cache</code> (or <code>functools.cache</code> in Python 3.9) to prevent refetching - further details in the <a href="https://docs.python.org/3/library/functools.html">functools documentation</a>. <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>Given this data is static, we could use the <code>functools.lru_cache</code> (or <code>functools.cache</code> in Python 3.9) to prevent refetching; further details in the <a href="https://docs.python.org/3/library/functools.html">functools documentation</a>. <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:3" role="doc-endnote">
-<p>Note that <a href="https://pydantic-docs.helpmanual.io/"><code>pydantic</code> documentation</a> does have both a memory and processing footprint, this is only important if you are trying to optimise extremely large datasets - for most data readability and correctness will outweigh these considerations. It is worth noting that there are other ways to achieve this as part of your data quality pipeline, for example using <a href="https://greatexpectations.io/">greatexpectations</a>. <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p><a href="https://pydantic-docs.helpmanual.io/"><code>pydantic</code> documentation</a> has both a memory and processing footprint. This is only important if you are trying to optimise extremely large datasets. For most data readability and correctness will outweigh these considerations. There are other ways to achieve this as part of your data quality pipeline, for example using <a href="https://greatexpectations.io/">greatexpectations</a>. <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 </ol>
 </section>
