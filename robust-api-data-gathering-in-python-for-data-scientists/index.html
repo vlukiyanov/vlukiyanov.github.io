@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/robust-api-data-gathering-in-python-for-data-scientists\/",
-    "wordCount" : "1956",
+    "wordCount" : "1951",
     "genre" : [ "python" , "tutorial" , "advanced" , "api" , "rest" , "pydantic" , "yarl" , "pandas" ],
     "keywords" : [ ]
     }
@@ -148,11 +148,6 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
     <span class="n">retry</span><span class="o">=</span><span class="n">retry_if_exception_type</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span><span class="p">),</span>
     <span class="n">wait</span><span class="o">=</span><span class="n">wait_exponential</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">stop</span><span class="o">=</span><span class="n">stop_after_attempt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="nd">@retry</span><span class="p">(</span>
-    <span class="n">retry</span><span class="o">=</span><span class="n">retry_if_exception_type</span><span class="p">(</span><span class="n">RateLimitException</span><span class="p">),</span>
-    <span class="n">wait</span><span class="o">=</span><span class="n">wait_fixed</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
-    <span class="n">stop</span><span class="o">=</span><span class="n">stop_after_delay</span><span class="p">(</span><span class="mi">60</span><span class="p">),</span>
 <span class="p">)</span>
 <span class="nd">@retry</span><span class="p">(</span>
     <span class="n">retry</span><span class="o">=</span><span class="n">retry_if_exception_type</span><span class="p">(</span><span class="n">RateLimitException</span><span class="p">),</span>
