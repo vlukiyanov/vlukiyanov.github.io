@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/robust-api-data-gathering-in-python-for-data-scientists\/",
-    "wordCount" : "1991",
+    "wordCount" : "1990",
     "genre" : [ "python" , "tutorial" , "advanced" , "api" , "rest" , "pydantic" , "yarl" , "pandas" ],
     "keywords" : [ ]
     }
@@ -157,7 +157,7 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 <span class="nd">@limits</span><span class="p">(</span><span class="n">calls</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">call_get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">URL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">update_query</span><span class="p">(</span><span class="n">get_id_key</span><span class="p">()))</span><span class="o">.</span><span class="n">text</span>
-</code></pre></div><p>This first <code>@retry</code> this will catch the <code>RateLimitException</code> and retry every second for a maximum of 60 seconds, the second <code>@retry</code> will soak up <code>requests</code> errors; we assume these are disjoint. With limits and retries implemented, the extract part of our code should be able to run unsupervised, so we are able to gather any data we need for our analysis.</p>
+</code></pre></div><p>This first <code>@retry</code> will catch the <code>RateLimitException</code> and retry every second for a maximum of 60 seconds, the second <code>@retry</code> will soak up <code>requests</code> errors; we assume these are disjoint. With limits and retries implemented, the extract part of our code should be able to run unsupervised, so we are able to gather any data we need for our analysis.</p>
 <h1 id="parsing-with-pydantic-and-loading-with-pandas">Parsing with <code>pydantic</code> and loading with <code>pandas</code></h1>
 <p>It is rare for an API to return data in the format we need to perform our analysis<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>. There is usually an initial transformation stage where we turn the JSON (or if you&rsquo;re unlucky XML) data into a cleaned up row in a table. <a href="https://pydantic-docs.helpmanual.io/">Pydantic</a> is a good library for initial data processing of raw JSON to a fixed self-documenting schema, a more powerful alternative to <a href="https://docs.python.org/3/library/dataclasses.html">dataclasses</a>.</p>
 <p>The <a href="https://pydantic-docs.helpmanual.io/"><code>pydantic</code> documentation</a> is easy to read and goes through most of the fundamental uses of the library. If we define <code>line_stop_points</code> as</p>
