@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/robust-api-data-gathering-in-python-for-data-scientists\/",
-    "wordCount" : "1990",
+    "wordCount" : "1989",
     "genre" : [ "python" , "tutorial" , "advanced" , "api" , "rest" , "pydantic" , "yarl" , "pandas" ],
     "keywords" : [ ]
     }
@@ -208,7 +208,7 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">distance</span><span class="p">:</span> <span class="n">confloat</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># from the centre of London, (51.509865, -0.118092)</span>
     <span class="n">connections</span><span class="p">:</span> <span class="n">conint</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</code></pre></div><p>The fields like <code>pydantic.conint</code> and <code>pydantic.confloat</code> put tight bounds on the data that this class can store, for example <code>ge=0</code> means greater or equal to 0. <code>pydantic</code> supports <a href="https://pydantic-docs.helpmanual.io/usage/types/">many of these fields</a>.</p>
+</code></pre></div><p>Fields like <code>pydantic.conint</code> and <code>pydantic.confloat</code> put tight bounds on the data that this class can store, for example <code>ge=0</code> means greater or equal to 0. <code>pydantic</code> supports <a href="https://pydantic-docs.helpmanual.io/usage/types/">many of these fields</a>.</p>
 <p>We can now write parsing to transform a raw JSON into <code>LineStopPointInfo</code> and define <code>line_stop_points</code> to return a list of <code>LineStopPointInfo</code> instead of the raw data:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="k">def</span> <span class="nf">parse_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LineStopPointInfo</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">LineStopPointInfo</span><span class="p">(</span>
