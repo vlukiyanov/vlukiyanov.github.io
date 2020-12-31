@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/robust-api-data-gathering-in-python-for-data-scientists\/",
-    "wordCount" : "1989",
+    "wordCount" : "1969",
     "genre" : [ "python" , "tutorial" , "advanced" , "api" , "rest" , "pydantic" , "yarl" , "pandas" ],
     "keywords" : [ ]
     }
@@ -357,16 +357,16 @@ are documented using OpenAPI 3 specifications - a relatively rare but helpful ob
 <hr>
 <ol>
 <li id="fn:1" role="doc-endnote">
-<p>Throughout this guide we haven&rsquo;t mention testing, in particular unit testing - a key concept in engineering. The components discussed simplify testing but this is outside the scope; perhaps something for another post. <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>Throughout this guide we haven&rsquo;t mention testing, in particular unit testing - a key concept in engineering. The components discussed simplify testing but this is outside the scope. <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:2" role="doc-endnote">
-<p>If we were building an SDK for the TfL API or creating a software integration, then the OpenAPI 3 specifications can be used to auto-generate classes in our code. You can read about this for <code>pydantic</code> in the <a href="https://pydantic-docs.helpmanual.io/datamodel_code_generator/"><code>datamodel-codegen</code> library</a>. <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>If we were building an SDK for the TfL API or creating a software integration, then the OpenAPI 3 specifications can be used to auto-generate classes in our code. See <a href="https://pydantic-docs.helpmanual.io/datamodel_code_generator/"><code>datamodel-codegen</code> library</a> for <code>pydantic</code>. <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:3" role="doc-endnote">
-<p>Given this data is static, we could use the <code>functools.lru_cache</code> (or <code>functools.cache</code> in Python 3.9) to prevent refetching; further details in the <a href="https://docs.python.org/3/library/functools.html">functools documentation</a>. <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>We could use the <code>functools.lru_cache</code> (or <code>functools.cache</code> in Python 3.9) to prevent refetching; further details in the <a href="https://docs.python.org/3/library/functools.html">functools documentation</a>. <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:4" role="doc-endnote">
-<p><a href="https://pydantic-docs.helpmanual.io/"><code>pydantic</code></a> has both a memory and processing footprint. This is only important if you are trying to optimise for extremely large datasets. For most applications data readability and correctness will outweigh these considerations. There are other ways to achieve this as part of your data quality pipeline, for example using <a href="https://greatexpectations.io/">greatexpectations</a>. <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p><a href="https://pydantic-docs.helpmanual.io/"><code>pydantic</code></a> has both a memory and processing footprint, which could be important when optimising for extremely large datasets. For most applications data readability and correctness will outweigh these considerations. There are other ways to achieve this as part of your data quality pipeline, for example using <a href="https://greatexpectations.io/">greatexpectations</a>. <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 </ol>
 </section>
