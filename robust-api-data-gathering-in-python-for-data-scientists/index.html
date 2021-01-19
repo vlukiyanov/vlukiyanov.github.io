@@ -60,7 +60,7 @@
     },
     "image": "https://vlukiyanov.github.io",
     "url" : "https:\/\/vlukiyanov.github.io\/robust-api-data-gathering-in-python-for-data-scientists\/",
-    "wordCount" : "1973",
+    "wordCount" : "1972",
     "genre" : [ "python" , "tutorial" , "advanced" , "api" , "rest" , "pydantic" , "yarl" , "pandas" ],
     "keywords" : [ ]
     }
@@ -88,7 +88,7 @@
 <h1 id="setting-up">Setting up</h1>
 <p>As a running example we are going to answer a data science question using the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> - we&rsquo;ll analyse the number of connections between tube lines by their distance from the centre of London.</p>
 <p>To gain access to the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> you will need to register for an application key on the TfL link, this consists of an <code>app_id</code> and <code>app_key</code>. It is worth noting that the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> response types
-are documented using OpenAPI 3 - a relatively rare but helpful observation which in we ignore<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>. The aim here is to describe a set of general methods, rather than focusing on the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> or methods of writing API SDKs.</p>
+are documented using OpenAPI 3 - a relatively rare but helpful observation which we ignore<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>. The aim here is to describe a set of general methods, rather than focusing on the <a href="https://api-portal.tfl.gov.uk/">TfL API</a> or methods of writing API SDKs.</p>
 <h1 id="url-structures-with-yarl">URL structures with <code>yarl</code></h1>
 <p>Manipulating URLs is a common operation when dealing with HTTP APIs. The two most common operations are adding paths to an endpoint and updating query parameters. Whilst you can do this using pure strings, <a href="https://docs.python.org/3/library/urllib.request.html#urllib-examples">urllib</a>, or <a href="https://requests.readthedocs.io/en/master/user/quickstart/#passing-parameters-in-urls">requests itself</a>, this can become unwieldy and prone to error; this is especially true when you are building up the URL iteratively. Using <a href="https://github.com/aio-libs/yarl">yarl</a> can improve this:</p>
 <div class="highlight"><pre class="chroma"><code class="language-python3" data-lang="python3"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">yarl</span> <span class="k">import</span> <span class="n">URL</span>
